@@ -1,4 +1,5 @@
 from flask import Flask
+import logging
 
 from auth import verify_token
 import auth_bp
@@ -19,6 +20,8 @@ with app.app_context():
 
 app.register_blueprint(auth_bp.bp)
 app.register_blueprint(file_bp.file_bp)
+
+app.logger.setLevel(logging.DEBUG)
 
 @app.route("/")
 def home():

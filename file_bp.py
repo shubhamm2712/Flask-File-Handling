@@ -1,5 +1,5 @@
 from typing import Optional
-from flask import Blueprint, request, send_file
+from flask import Blueprint, request, send_file, current_app
 
 from auth import verify_token
 from database import UserDB, FileDB
@@ -11,6 +11,7 @@ file_bp = Blueprint("file_bp", __name__, url_prefix="/files")
 @file_bp.route("/")
 @file_bp.route("/<fileId>")
 def files(fileId: Optional[int] = None):
+    current_app.logger.debug("Hi from files")
     try:
         user, token = verify_token()
         if fileId is None:
