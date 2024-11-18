@@ -41,7 +41,6 @@ def get_files(user: UserDB):
     rows = db.session.execute(stmt).all()
     files = []
     for file in rows:
-        print(type(file[0]))
         files.append(file[0].toJson())
     return {"files": files}
 
