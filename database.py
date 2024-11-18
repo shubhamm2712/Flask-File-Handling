@@ -59,6 +59,7 @@ class FileDB(db.Model):
     
     def toJson(self):
         return {
+            "id": self.id,
             "name": self.name,
             "url": self.url,
             "userId": self.userId,

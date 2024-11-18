@@ -45,6 +45,16 @@ def get_files(user: UserDB):
         files.append(file[0].toJson())
     return {"files": files}
 
+def get_file(user: UserDB, fileId: int):
+    stmt = select(FileDB).where(FileDB.id == fileId)
+    rows = db.session.execute(stmt).one_or_none()
+    if rows is None:
+        raise CustomExceptions("Invalid file id", 400)
+    file: FileDB = rows[0]
+    if file.userId != user.id:
+        raise CustomExceptions("Invalid file id", 400)
+    return file.url
+
 def add_file(user: UserDB, name: str, file):
     stmt = select(UserDB).where(UserDB.id == user.id)
     rows = db.session.execute(stmt).one_or_none()
@@ -58,8 +68,27 @@ def add_file(user: UserDB, name: str, file):
     filename = UPLOAD_FOLDER+f"{str(user.id)}_{str(files_len)}.{ext}"
     file.save(filename)
     file = FileDB(name, filename, userId=user.id)
-
     db.session.add(file)
     db.session.commit()
 
+def update_file(user: UserDB, fileId: int, name: str):
+    stmt = select(FileDB).where(FileDB.id == fileId)
+    rows = db.session.execute(stmt).one_or_none()
+    if rows is None:
+        raise CustomExceptions("File does not exist", 400)
+    file: FileDB = rows[0]
+    if user.id != file.userId:
+        raise CustomExceptions("File does not exist for you", 400)
+    file.name = name
+    db.session.commit()
 
+def delete_file(user: UserDB, fileId: int):
+    stmt = select(FileDB).where(FileDB.id == fileId)
+    rows = db.session.execute(stmt).one_or_none()
+    if rows is None:
+        raise CustomExceptions("Invalid file id", 400)
+    file: FileDB = rows[0]
+    if file.userId != user.id:
+        raise CustomExceptions("Invalid file for you", 400)
+    db.session.delete(file)
+    db.session.commit()

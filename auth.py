@@ -35,5 +35,7 @@ def verify_token():
         raise e
     except KeyError as e:
         raise CustomExceptions("Invalid token, key error: "+str(e), 401)
+    except jwt.exceptions.ExpiredSignatureError as e:
+        raise CustomExceptions("Signature expired", 401)
     except Exception as e:
         raise CustomExceptions("Exception in token verification "+str(e), 401)

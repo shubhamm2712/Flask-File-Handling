@@ -1,3 +1,4 @@
+from typing import Optional
 from flask import Blueprint, request, send_file
 
 from auth import verify_token
@@ -8,10 +9,14 @@ from exceptions import CustomExceptions
 file_bp = Blueprint("file_bp", __name__, url_prefix="/files")
 
 @file_bp.route("/")
-def files():
+@file_bp.route("/<fileId>")
+def files(fileId: Optional[int] = None):
     try:
         user, token = verify_token()
-        return db_ops.get_files(user)
+        if fileId is None:
+            return db_ops.get_files(user)
+        url = db_ops.get_file(user, fileId)
+        return send_file(url)
     except CustomExceptions as e:
         return e.response()
     except Exception as e:
@@ -36,7 +41,35 @@ def add_file():
     except Exception as e:
         return {"message": "Exception "+str(e)}, 500
     
-
-@file_bp.route("/filedd")
-def get_file():
-    return send_file("./files/3_1.pdf")
+@file_bp.route("/change", methods=["PUT"])
+def putName():
+    try:
+        user, token = verify_token()
+        data = request.get_json()
+        fileId = data.get("fileId", "")
+        if type(fileId) == str:
+            fileId = fileId.strip()
+            if fileId.isnumeric():
+                fileId = int(fileId)
+            else:
+                raise CustomExceptions("Invalid file id", 400)
+        elif type(fileId) != int:
+            raise CustomExceptions("Invalid fileId", 400)
+        name = data.get("name", "").strip()
+        db_ops.update_file(user, fileId, name)
+        return {"message": "Successfully updated file"}
+    except CustomExceptions as e:
+        return e.response()
+    except Exception as e:
+        return {"message": "Exception: "+str(e)}, 500
+    
+@file_bp.route("/delete/<fileId>", methods=["DELETE"])
+def delete(fileId: int):
+    try:
+        user, token = verify_token()
+        db_ops.delete_file(user, fileId)
+        return {"message": "Successfully deleted"}
+    except CustomExceptions as e:
+        return e.response()
+    except Exception as e:
+        return {"message": "Exception: "+str(e)}, 500
